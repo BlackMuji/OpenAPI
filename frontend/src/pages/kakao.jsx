@@ -1,32 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import "../scss/kakao.scss";
-
-// 1) 좌표를 다른 js 에 모아놓고 품목 선택하고 평수 검색하면 예상 수확량 나오면서 평수 맞게(?) 생산지 추천
-// 2) 다각형 면적 계산하기 이용. 품목 선택하면 지역추천 몇 군데 해주고 해당영역에서 다각형 만들면 평수 나오고 예상 수확량 출력
 
 const { kakao } = window;
 
 const Kakao = () => {
-    const [drawingFlag, setDrawingFlag] = useState(false);
-    const [drawingPolygon, setDrawingPolygon] = useState(null);
-    const [polygon, setPolygon] = useState(null);
-    const [areaOverlay, setAreaOverlay] = useState(null);
-    const [drawingEnabled, setDrawingEnabled] = useState(false);
+    const mapRef = useRef(null); // 지도 인스턴스를 참조
+    const drawingFlag = useRef(false); // 다각형 그리기 상태 플래그
+    const drawingPolygon = useRef(null); // 현재 그리고 있는 다각형 객체
+    const polygon = useRef(null); // 그리기 완료된 다각형 객체
+    const areaOverlay = useRef(null); // 다각형 면적 정보를 표시하는 커스텀 오버레이
 
+    // 지형 정보 및 지적 편집도 정보 지도를 사용
     useEffect(() => {
         const container = document.getElementById('map');
         const options = {
-            center: new kakao.maps.LatLng(33.450701, 126.570667),
+            center: new kakao.maps.LatLng(33.450701, 126.570667), // 지도 시작 좌표
             level: 3
         };
         const map = new kakao.maps.Map(container, options);
+        mapRef.current = map;
 
         const mapTypes = {
             terrain: kakao.maps.MapTypeId.TERRAIN,
             useDistrict: kakao.maps.MapTypeId.USE_DISTRICT
         };
 
-        const positions = [
+        // 마커 좌표 (연습용)
+        const positions = [ 
             {
                 title: '카카오',
                 latlng: new kakao.maps.LatLng(33.450705, 126.570677)
@@ -43,12 +43,13 @@ const Kakao = () => {
                 title: '근린공원',
                 latlng: new kakao.maps.LatLng(33.451393, 126.570738)
             }
-        ];
+        ]; 
 
-        const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+        const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"; // 마커 이미지 URL
 
-        positions.forEach((position) => {
-            const imageSize = new kakao.maps.Size(24, 35);
+        // 위치 별로 각각 마커 생성
+        positions.forEach((position) => {   
+            const imageSize = new kakao.maps.Size(24, 35); // 마커 이미지 크기
             const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
             const marker = new kakao.maps.Marker({
                 map: map,
@@ -56,9 +57,10 @@ const Kakao = () => {
                 title: position.title,
                 image: markerImage
             });
-        });
+        }); 
 
-        function setMapType(maptype) {
+        // 지도 타입 변경 함수 (일반 지도 / 스카이뷰)
+        function setMapType(maptype) {  
             const roadmapControl = document.getElementById('btnRoadmap');
             const skyviewControl = document.getElementById('btnSkyview');
             if (maptype === 'roadmap') {
@@ -70,59 +72,57 @@ const Kakao = () => {
                 skyviewControl.className = 'selected_btn';
                 roadmapControl.className = 'btn';
             }
-        }
+        }   
 
-        function setOverlayMapTypeId() {
+        // 지형 정보 및 지적 편집도 정보 지도 오버레이 설정 함수
+        function setOverlayMapTypeId() {    
             const chkTerrain = document.getElementById('chkTerrain');
             const chkUseDistrict = document.getElementById('chkUseDistrict');
 
-            // 지도 타입을 제거합니다
+            // 비활성화 체크 후 오버레이 제거
             for (var type in mapTypes) {
                 map.removeOverlayMapTypeId(mapTypes[type]);
             }
 
-            // 지적편집도정보 체크박스가 체크되어있으면 지도에 지적편집도정보 지도타입을 추가합니다
-            if (chkUseDistrict.checked) {
+            // 지적 편집도 정보 오버레이 추가
+            if (chkUseDistrict.checked) {   
                 map.addOverlayMapTypeId(mapTypes.useDistrict);
             }
 
-            // 지형정보 체크박스가 체크되어있으면 지도에 지형정보 지도타입을 추가합니다
+            // 지형 정보 오버레이 추가
             if (chkTerrain.checked) {
                 map.addOverlayMapTypeId(mapTypes.terrain);
             }
-        }
+        } 
 
-        function relayout() {
-            map.relayout();
-        }
-
-        function zoomIn() {
+        // 지도 확대 함수
+        function zoomIn() { 
             map.setLevel(map.getLevel() - 1);
         }
 
-        function zoomOut() {
+        // 지도 축소 함수
+        function zoomOut() {    
             map.setLevel(map.getLevel() + 1);
         }
 
+        // 지도 클릭 이벤트 핸들러
         function handleMapClick(mouseEvent) {
-            if (!drawingEnabled) return;
-
             const clickPosition = mouseEvent.latLng;
 
-            if (!drawingFlag) {
-                setDrawingFlag(true);
+            if (!drawingFlag.current) {
+                drawingFlag.current = true;
 
-                if (polygon) {
-                    polygon.setMap(null);
-                    setPolygon(null);
+                if (polygon.current) {
+                    polygon.current.setMap(null);
+                    polygon.current = null;
                 }
 
-                if (areaOverlay) {
-                    areaOverlay.setMap(null);
-                    setAreaOverlay(null);
+                if (areaOverlay.current) {
+                    areaOverlay.current.setMap(null);
+                    areaOverlay.current = null;
                 }
 
-                const newDrawingPolygon = new kakao.maps.Polygon({
+                drawingPolygon.current = new kakao.maps.Polygon({
                     map: map,
                     path: [clickPosition],
                     strokeWeight: 3,
@@ -133,9 +133,7 @@ const Kakao = () => {
                     fillOpacity: 0.2
                 });
 
-                setDrawingPolygon(newDrawingPolygon);
-
-                const newPolygon = new kakao.maps.Polygon({
+                polygon.current = new kakao.maps.Polygon({
                     path: [clickPosition],
                     strokeWeight: 3,
                     strokeColor: '#00a0e9',
@@ -144,108 +142,92 @@ const Kakao = () => {
                     fillColor: '#00a0e9',
                     fillOpacity: 0.2
                 });
-
-                setPolygon(newPolygon);
             } else {
-                const drawingPath = drawingPolygon.getPath();
+                const drawingPath = drawingPolygon.current.getPath();
                 drawingPath.push(clickPosition);
-                drawingPolygon.setPath(drawingPath);
+                drawingPolygon.current.setPath(drawingPath);
 
-                const path = polygon.getPath();
+                const path = polygon.current.getPath();
                 path.push(clickPosition);
-                polygon.setPath(path);
+                polygon.current.setPath(path);
             }
         }
 
+        // 지도 마우스 이동 이벤트 핸들러
         function handleMapMouseMove(mouseEvent) {
-            if (!drawingFlag) return;
+            if (!drawingFlag.current) return;
 
             const mousePosition = mouseEvent.latLng;
-            const path = drawingPolygon.getPath();
+            const path = drawingPolygon.current.getPath();
 
             if (path.length > 1) {
                 path.pop();
             }
 
             path.push(mousePosition);
-            drawingPolygon.setPath(path);
+            drawingPolygon.current.setPath(path);
         }
 
+        // 지도 마우스 오른쪽 클릭 이벤트 핸들러
         function handleMapRightClick(mouseEvent) {
-            if (!drawingFlag) return;
+            if (!drawingFlag.current) return;
 
-            drawingPolygon.setMap(null);
-            setDrawingPolygon(null);
+            drawingPolygon.current.setMap(null);
+            drawingPolygon.current = null;
 
-            const path = polygon.getPath();
+            const path = polygon.current.getPath();
 
             if (path.length > 2) {
-                polygon.setMap(map);
+                polygon.current.setMap(map);
 
-                const area = Math.round(polygon.getArea());
+                const area = Math.round(polygon.current.getArea());
                 const content = `<div class="info">총면적 <span class="number">${area}</span> m<sup>2</sup></div>`;
 
-                const newAreaOverlay = new kakao.maps.CustomOverlay({
+                areaOverlay.current = new kakao.maps.CustomOverlay({
                     map: map,
                     content: content,
                     xAnchor: 0,
                     yAnchor: 0,
                     position: path[path.length - 1]
                 });
-
-                setAreaOverlay(newAreaOverlay);
             } else {
-                setPolygon(null);
+                polygon.current = null;
             }
 
-            setDrawingFlag(false);
+            drawingFlag.current = false;
         }
 
+        // 이벤트 리스너 등록
         kakao.maps.event.addListener(map, 'click', handleMapClick);
         kakao.maps.event.addListener(map, 'mousemove', handleMapMouseMove);
         kakao.maps.event.addListener(map, 'rightclick', handleMapRightClick);
 
-        document.getElementById('chkUseDistrict').addEventListener('click', () => setOverlayMapTypeId('chkTerrain'));
-        document.getElementById('chkTerrain').addEventListener('click', () => setOverlayMapTypeId('chkUseDistrict'));
+        // 지도 타입 및 오버레이 컨트롤 이벤트 등록
+        document.getElementById('chkUseDistrict').addEventListener('click', () => setOverlayMapTypeId());
+        document.getElementById('chkTerrain').addEventListener('click', () => setOverlayMapTypeId());
         document.getElementById('btnRoadmap').addEventListener('click', () => setMapType('roadmap'));
         document.getElementById('btnSkyview').addEventListener('click', () => setMapType('skyview'));
         document.querySelector('.custom_zoomcontrol span:nth-child(1)').addEventListener('click', zoomIn);
         document.querySelector('.custom_zoomcontrol span:nth-child(2)').addEventListener('click', zoomOut);
 
+        // 컴포넌트 언마운트 시 이벤트 리스너 제거
         return () => {
             kakao.maps.event.removeListener(map, 'click', handleMapClick);
             kakao.maps.event.removeListener(map, 'mousemove', handleMapMouseMove);
             kakao.maps.event.removeListener(map, 'rightclick', handleMapRightClick);
         };
-    }, [drawingFlag, drawingPolygon, polygon, areaOverlay, drawingEnabled]);
-
-    const toggleDrawing = () => {
-        setDrawingEnabled(!drawingEnabled);
-        setDrawingFlag(false);
-        if (drawingPolygon) {
-            drawingPolygon.setMap(null);
-            setDrawingPolygon(null);
-        }
-        if (polygon) {
-            polygon.setMap(null);
-            setPolygon(null);
-        }
-        if (areaOverlay) {
-            areaOverlay.setMap(null);
-            setAreaOverlay(null);
-        }
-    };
+    }, []);
 
     return (
         <div className="map_wrap">
             <div id="map" style={{ width: "100%", height: "100%" }}></div>
             <div className="custom_Overlaycontrol">
                 <label className="custom_checkbox">
-                    <input type="checkbox" id="chkUseDistrict" onclick="setOverlayMapTypeId()" />
+                    <input type="checkbox" id="chkUseDistrict" />
                     <span>지적편집도 정보 보기</span>
                 </label>
                 <label className="custom_checkbox">
-                    <input type="checkbox" id="chkTerrain" onclick="setOverlayMapTypeId()" />
+                    <input type="checkbox" id="chkTerrain" />
                     <span>지형정보 보기</span>
                 </label>
             </div>
@@ -256,11 +238,6 @@ const Kakao = () => {
             <div className="custom_zoomcontrol radius_border">
                 <span><img src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_plus.png" alt="확대" /></span>
                 <span><img src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_minus.png" alt="축소" /></span>
-            </div>
-            <div className="custom_drawcontrol">
-                <button onClick={toggleDrawing}>
-                    {drawingEnabled ? '다각형 그리기 중지' : '다각형 그리기 시작'}
-                </button>
             </div>
         </div>
     );

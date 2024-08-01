@@ -35,30 +35,34 @@ const Sidebar = () => {
 
     return (
         <div className='sidebar'>
-            <div className='input-wrap'>
-                <select
-                    className="select-crop"
-                    name="crops"
-                    id="crops"
-                    value={selectedCrop}
-                    onChange={(e) => setSelectedCrop(e.target.value)}
-                >
-                    <option value="potato">감자</option>
-                    <option value="tomato">토마토</option>
-                    <option value="strawberry">딸기</option>
-                    <option value="watermelon">수박</option>
-                </select>
-                <input
-                    className="search__input"
-                    type="number"
-                    id="searchInput"
-                    placeholder="평수를 입력해주세요."
-                    value={answer}
-                    onChange={handleAnswerChange}
-                />
+            <div className='content-wrap'>
+                <div className='input-wrap'>
+                    <select
+                        className="select-crop"
+                        name="crops"
+                        id="crops"
+                        value={selectedCrop}
+                        onChange={(e) => setSelectedCrop(e.target.value)}
+                    >
+                        <option value="potato">감자</option>
+                        <option value="tomato">토마토</option>
+                        <option value="strawberry">딸기</option>
+                        <option value="watermelon">수박</option>
+                    </select>
+                    <input
+                        className="search__input"
+                        type="number"
+                        id="searchInput"
+                        placeholder="평수를 입력해주세요."
+                        value={answer}
+                        onChange={handleAnswerChange}
+                    />
+                </div>
+                <h4>지도를 마우스로 클릭하면 다각형 그리기가 시작되고, 오른쪽 마우스를 클릭하면 다각형 그리기가 종료됩니다.</h4>
             </div>
         </div>
     )
+    
 }
 
 export default Sidebar

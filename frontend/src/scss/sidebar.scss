@@ -7,18 +7,26 @@
     height: 100%;
     background-color: white;
 
+    .content-wrap {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
     .input-wrap {
         display: flex;
         width: 100%;
         height: 150px;
-        padding: 20px 10px 2px;
+        padding-top: 20px;
+        padding-bottom: 2px;
         background-color: green;
-        
+
         .select-crop {
             width: 100px;
             height: 50px;
             border: 0px;
             border-radius: 2px;
+            margin-left: 10px;
         }
         .search__input {
             position: relative;
@@ -26,9 +34,13 @@
             height: 50px;
             padding: 0;
             margin-left: 10px;
+            margin-right: 10px;
             border: 0px;
             border-radius: 2px;
         }
     }
 
+    h4 {
+        padding: 20px 10px;
+    }
 }
