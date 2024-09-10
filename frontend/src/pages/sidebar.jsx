@@ -12,6 +12,8 @@ const Sidebar = () => {
 
     useEffect(() => {
         switch (selectedCrop) {
+            case 'empty':
+                console.log('선택된 작물이 없습니다.');
             case 'potato':
                 console.log('감자를 선택했습니다.');
                 // 감자에 대한 조건문 처리
@@ -44,6 +46,7 @@ const Sidebar = () => {
                         value={selectedCrop}
                         onChange={(e) => setSelectedCrop(e.target.value)}
                     >
+                        <option value="empty">--작물--</option>
                         <option value="potato">감자</option>
                         <option value="tomato">토마토</option>
                         <option value="strawberry">딸기</option>
