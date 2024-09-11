@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom';
 import '../scss/sidebar.scss'
 
+import WeatherForm from '../components/WeatherForm';
+
 const Sidebar = () => {
+    const navigate = useNavigate();
+
+    const goToCrop = () => {
+        // "/about" 경로로 이동
+        navigate('/Crop');
+    };
+
     const [answer, setAnswer] = useState('');
     const [selectedCrop, setSelectedCrop] = useState('');
 
@@ -39,19 +49,7 @@ const Sidebar = () => {
         <div className='sidebar'>
             <div className='content-wrap'>
                 <div className='input-wrap'>
-                    <select
-                        className="select-crop"
-                        name="crops"
-                        id="crops"
-                        value={selectedCrop}
-                        onChange={(e) => setSelectedCrop(e.target.value)}
-                    >
-                        <option value="empty">--작물--</option>
-                        <option value="potato">감자</option>
-                        <option value="tomato">토마토</option>
-                        <option value="strawberry">딸기</option>
-                        <option value="watermelon">수박</option>
-                    </select>
+                    <WeatherForm/>
                     <input
                         className="search__input"
                         type="number"
@@ -62,10 +60,13 @@ const Sidebar = () => {
                     />
                 </div>
                 <h4>지도를 마우스로 클릭하면 다각형 그리기가 시작되고, 오른쪽 마우스를 클릭하면 다각형 그리기가 종료됩니다.</h4>
+                <div>
+                    <button onClick={goToCrop}>Go to Crop</button>
+                </div>
             </div>
         </div>
     )
-    
+
 }
 
 export default Sidebar

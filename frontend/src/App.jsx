@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // 기존 컴포넌트
 import Main from './pages/main';
+import Crop from './pages/Crop';
 
 
 const App = () => {
@@ -11,6 +12,7 @@ const App = () => {
       <Suspense fallback={<div>Loading...</div>}>
         <Routes>
           <Route path="/" element={<Main />} />
+          <Route path="/Crop" element={<Crop />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
