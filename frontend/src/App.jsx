@@ -8,13 +8,11 @@ import Crop from './pages/Crop';
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Routes>
-          <Route path="/" element={<Main />} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
+        <Route path="/" element={<Main />} />
+      </Routes>
+    </Suspense>
   );
 };
 
