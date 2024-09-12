@@ -12,7 +12,6 @@ const App = () => {
       <Suspense fallback={<div>Loading...</div>}>
         <Routes>
           <Route path="/" element={<Main />} />
-          <Route path="/Crop" element={<Crop />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
