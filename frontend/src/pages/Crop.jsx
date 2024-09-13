@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { fetchWeatherData } from '../API/fetchData';
 import WeatherForm from '../components/WeatherForm';
 import WeatherList from '../components/WeatherList';
+import Soil from './Soildata.jsx';
 import Modal from 'react-modal';
+import { Geocode } from '../data/Geocode';  // Geocode를 불러옴
 
-Modal.setAppElement('#root');  // React Modal의 접근성 설정
+Modal.setAppElement('#root');
 
-function Crop() {
+function Crop({ setRegion }) {
   const [pageNo, setPageNo] = useState(1);
   const [numOfRows] = useState(12);
   const [weatherData, setWeatherData] = useState([]);
@@ -16,10 +18,15 @@ function Crop() {
   const [queryParams, setQueryParams] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Geocode에서 regionId와 앞 5자리가 같은 항목을 찾음
+  const matchingRegions = Geocode.filter((item) => {
+    // queryParams.regionId가 존재하는지 먼저 체크하고 필터링 진행
+    return queryParams.regionId && item.code && (item.type === "H") && String(item.code).startsWith(queryParams.regionId.substring(0, 5));
+  });
+
+
   const fetchData = useCallback(async () => {
     const { ST_YM, ED_YM, regionId, cropId } = queryParams;
-
-    console.log("Request Parameters:", { ST_YM, ED_YM, regionId, cropId });
 
     try {
       setLoading(true);
@@ -52,32 +59,50 @@ function Crop() {
       <WeatherForm onSubmit={setQueryParams} resetPageNo={resetPageNo} />
       {loading && <p>데이터를 불러오는 중입니다...</p>}
       {error && <p>{error}</p>}
-      {!loading && !error && weatherData.length > 0 && (
-        <>
-          <button onClick={() => setIsModalOpen(true)} disabled={loading}>차트 보기</button>
-          <Modal
-            isOpen={isModalOpen}
-            onRequestClose={() => setIsModalOpen(false)}
-            contentLabel="Weather Data Charts"
-            ariaHideApp={false}
-            style={{
-              content: {
-                top: '50%',
-                left: '50%',
-                right: 'auto',
-                bottom: 'auto',
-                transform: 'translate(-50%, -50%)',
-                width: '80%',
-                height: '80%',
-                padding: '20px'
-              }
-            }}
-          >
-            <h2>기상 데이터 차트</h2>
-            <button onClick={() => setIsModalOpen(false)}>닫기</button>
-            <WeatherList weatherData={weatherData} />
-          </Modal>
-        </>
+      {/* 필터링된 Geocode 정보 출력 */}
+      {matchingRegions.length > 0 ? (
+        <div>
+          <h3>해당 지역 정보:</h3>
+          <ul>
+            {matchingRegions.map((item, index) => (
+              <li key={index}>
+                {item.city} {item.county} {item.districts}
+
+                {!loading && !error && weatherData.length > 0 && (
+                  <>
+                    <button onClick={() => setIsModalOpen(true)} disabled={loading}>차트 보기</button>
+                    <Modal
+                      isOpen={isModalOpen}
+                      onRequestClose={() => setIsModalOpen(false)}
+                      contentLabel="Weather Data Charts"
+                      ariaHideApp={false}
+                      style={{
+                        content: {
+                          top: '50%',
+                          left: '50%',
+                          right: 'auto',
+                          bottom: 'auto',
+                          transform: 'translate(-50%, -50%)',
+                          width: '80%',
+                          height: '80%',
+                          padding: '20px'
+                        }
+                      }}
+                    >
+                      <h2>기상 데이터 차트</h2>
+                      <button onClick={() => setIsModalOpen(false)}>닫기</button>
+                      <WeatherList weatherData={weatherData} />
+                      <Soil pnuCode={Number(item.code)} />
+                    </Modal>
+                    <button onClick={() => setRegion({ lat: parseFloat(item.lat), lng: parseFloat(item.long) })}> 이동</button>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p>해당하는 지역 정보를 찾을 수 없습니다.</p>
       )}
     </div>
   );

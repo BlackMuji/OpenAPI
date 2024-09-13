@@ -1,8 +1,8 @@
-import { API_URL, API_KEY } from '../data/Config';
+import { CROP_API_URL, CROP_API_KEY } from '../data/Config';
 
 export const fetchWeatherData = async (pageNo, numOfRows, ST_YM, ED_YM, AREA_ID, PA_CROP_SPE_ID, dataType = 'XML', extraRows = 5) => {
   const totalRows = numOfRows + extraRows; // 추가 데이터를 포함해 요청
-  const endpoint = `${API_URL}/getMmStatistics?serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${totalRows}&dataType=${dataType}&ST_YM=${ST_YM}&ED_YM=${ED_YM}&AREA_ID=${AREA_ID}&PA_CROP_SPE_ID=${PA_CROP_SPE_ID}`;
+  const endpoint = `${CROP_API_URL}/getMmStatistics?serviceKey=${CROP_API_KEY}&pageNo=${pageNo}&numOfRows=${totalRows}&dataType=${dataType}&ST_YM=${ST_YM}&ED_YM=${ED_YM}&AREA_ID=${AREA_ID}&PA_CROP_SPE_ID=${PA_CROP_SPE_ID}`;
 
   console.log("API Request URL:", endpoint);
 
@@ -13,7 +13,6 @@ export const fetchWeatherData = async (pageNo, numOfRows, ST_YM, ED_YM, AREA_ID,
     }
 
     const responseText = await response.text();
-    console.log("API Response Text:", responseText);
 
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(responseText, 'application/xml');

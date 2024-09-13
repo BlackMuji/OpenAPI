@@ -7,27 +7,22 @@ function Kakao({ center }) {
   useKakaoLoader();
 
   const mapRef = useRef(null);
-  const [mapType, setMapType] = useState("roadmap");
-  const [overlayMapTypeId, setOverlayMapTypeId] = useState({
+  const [mapType, setMapType] = useState("roadmap");  // 맵 타입 설정 변수
+  const [overlayMapTypeId, setOverlayMapTypeId] = useState({  // 맵 오버레이(지형정보, 지적편집도) 상태 변수
     TERRAIN: false,
     USE_DISTRICT: false,
   });
   const [map, setMap] = useState(null);
-  const [isdrawing, setIsdrawing] = useState(false);
-  const [polygon, setPolygon] = useState();
-  const [paths, setPaths] = useState([]);
-  const [mousePosition, setMousePosition] = useState({
+  const [isdrawing, setIsdrawing] = useState(false);  // 그리기 활성화 상태 변수
+  const [polygon, setPolygon] = useState(); // 도형 폴리곤 상태 변수
+  const [paths, setPaths] = useState([]); // 마우스 이동 좌표 추적 변수
+  const [mousePosition, setMousePosition] = useState({  // 도형 꼭지점 좌표 변수
     lat: 0,
     lng: 0,
   });
 
   const [info, setInfo] = useState(null);
   const [markers, setMarkers] = useState([]);
-
-  useEffect(() => {
-    console.log('Center coordinates in Kakao:', center); // Should log the updated coordinates
-  }, [center]);
-
 
   const zoomIn = () => {
     const mapInstance = mapRef.current;
@@ -41,7 +36,7 @@ function Kakao({ center }) {
     mapInstance.setLevel(mapInstance.getLevel() + 1);
   };
 
-  const handleClick = (_map, mouseEvent) => {
+  const handleClick = (_map, mouseEvent) => { // 좌클릭 시 활성화(도형 그리기 시작)
     if (!isdrawing) {
       setPaths([]);
     }
@@ -62,7 +57,7 @@ function Kakao({ center }) {
     });
   };
 
-  const handleRightClick = (_map, _mouseEvent) => {
+  const handleRightClick = (_map, _mouseEvent) => { // 도형 그리기 종료
     setIsdrawing(false);
   };
 
