@@ -20,6 +20,10 @@ function Kakao({ center }) {
     lat: 0,
     lng: 0,
   });
+  const [isDrawingActive, setIsDrawingActive] = useState(false) // 도형 그리기 활성화 상태
+
+  const [regionName, setRegionName] = useState("");
+  const [regionCode, setRegionCode] = useState("");
 
   const [info, setInfo] = useState(null);
   const [markers, setMarkers] = useState([]);
@@ -37,6 +41,27 @@ function Kakao({ center }) {
   };
 
   const handleClick = (_map, mouseEvent) => { // 좌클릭 시 활성화(도형 그리기 시작)
+    if (!isDrawingActive) {
+      const geocoder = new window.kakao.maps.services.Geocoder();
+      const latlng = mouseEvent.latLng
+
+      const callback = (result, status) => {
+        if (status === window.kakao.maps.services.Status.OK) {
+          const addressName = result[0].address_name;
+          const regionCode = result[0].code;
+          
+          // API 호출 결과로 지역 명칭과 행정구역 코드를 저장
+          setRegionName(addressName);
+          setRegionCode(regionCode);
+
+          console.log("region: ",addressName, regionCode);
+        }
+      };
+      // coord2RegionCode를 사용하여 좌표에 해당하는 정보를 가져옴
+      geocoder.coord2RegionCode(latlng.getLng(), latlng.getLat(), callback);
+
+      return
+    };
     if (!isdrawing) {
       setPaths([]);
     }
@@ -51,6 +76,7 @@ function Kakao({ center }) {
   };
 
   const handleMouseMove = (_map, mouseEvent) => {
+    if (!isDrawingActive) return // 활성화 상태일 때만 동작
     setMousePosition({
       lat: mouseEvent.latLng.getLat(),
       lng: mouseEvent.latLng.getLng(),
@@ -58,8 +84,13 @@ function Kakao({ center }) {
   };
 
   const handleRightClick = (_map, _mouseEvent) => { // 도형 그리기 종료
+    if (!isDrawingActive) return // 활성화 상태일 때만 동작
     setIsdrawing(false);
   };
+
+  const handleActivateDrawing = (e) => {
+    setIsDrawingActive(e.target.checked) // 체크박스 상태에 따라 활성화/비활성화
+  }
 
   return (
     <div className='map_wrap'>
@@ -82,6 +113,12 @@ function Kakao({ center }) {
         {overlayMapTypeId.USE_DISTRICT && <MapTypeId type={"USE_DISTRICT"} />}
         {overlayMapTypeId.TERRAIN && <MapTypeId type={"TERRAIN"} />}
         <div className="custom_Overlaycontrol">
+          <label className="custom_checkbox">
+            <input type="checkbox" checked={isDrawingActive}
+              onChange={handleActivateDrawing}
+            />
+            <span>도형 그리기</span>
+          </label>
           <label className="custom_checkbox">
             <input type="checkbox" id="chkUseDistrict"
               onChange={(e) => setOverlayMapTypeId((p) => ({ ...p, USE_DISTRICT: e.target.checked }))}
@@ -154,31 +191,31 @@ export default Kakao;
 
 
 
-  /*
-  // 장소 검색 기능 추가
-  useEffect(() => {
-    if (!map || !window.kakao || !window.kakao.maps || !window.kakao.maps.services) return;
+/*
+// 장소 검색 기능 추가
+useEffect(() => {
+  if (!map || !window.kakao || !window.kakao.maps || !window.kakao.maps.services) return;
 
-    const ps = new window.kakao.maps.services.Places();
-    ps.keywordSearch("광주", (data, status, _pagination) => {
-      if (status === window.kakao.maps.services.Status.OK) {
-        const bounds = new window.kakao.maps.LatLngBounds();
-        const newMarkers = [];
+  const ps = new window.kakao.maps.services.Places();
+  ps.keywordSearch("광주", (data, status, _pagination) => {
+    if (status === window.kakao.maps.services.Status.OK) {
+      const bounds = new window.kakao.maps.LatLngBounds();
+      const newMarkers = [];
 
-        for (let i = 0; i < 1; i++) {
-          newMarkers.push({
-            position: {
-              lat: data[i].y,
-              lng: data[i].x,
-            },
-            content: data[i].place_name,
-          });
+      for (let i = 0; i < 1; i++) {
+        newMarkers.push({
+          position: {
+            lat: data[i].y,
+            lng: data[i].x,
+          },
+          content: data[i].place_name,
+        });
 
-          bounds.extend(new window.kakao.maps.LatLng(data[i].y, data[i].x));
-        }
-
-        setMarkers(newMarkers);
-        map.setBounds(bounds);
+        bounds.extend(new window.kakao.maps.LatLng(data[i].y, data[i].x));
       }
-    });
-  }, [map]); */
+
+      setMarkers(newMarkers);
+      map.setBounds(bounds);
+    }
+  });
+}, [map]); */
