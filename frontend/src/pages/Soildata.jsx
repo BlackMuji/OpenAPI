@@ -132,7 +132,7 @@ function Soil({ pnuCode }) {
                     </div>
                 </>
             ) : (
-                <p>No data available</p>  // 데이터가 없을 때 표시
+                <p>해당 지역은 토양 정보를 지원하지 않습니다.</p>  // 데이터가 없을 때 표시
             )}
         </div>
     );

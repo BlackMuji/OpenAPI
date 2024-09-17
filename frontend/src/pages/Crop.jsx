@@ -3,6 +3,7 @@ import { fetchWeatherData } from '../API/fetchData';
 import WeatherForm from '../components/WeatherForm';
 import WeatherList from '../components/WeatherList';
 import Soil from './Soildata.jsx';
+import Rand from './Rand.jsx';
 import Modal from 'react-modal';
 import { Geocode } from '../data/Geocode';  // Geocode를 불러옴
 
@@ -16,14 +17,13 @@ function Crop({ setRegion }) {
   const [error, setError] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
   const [queryParams, setQueryParams] = useState({});
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalOpenFor, setModalOpenFor] = useState(null); // 현재 어떤 차트 모달이 열렸는지 추적
+  const [selectedWeatherData, setSelectedWeatherData] = useState(null); // 선택된 차트의 데이터
 
   // Geocode에서 regionId와 앞 5자리가 같은 항목을 찾음
   const matchingRegions = Geocode.filter((item) => {
-    // queryParams.regionId가 존재하는지 먼저 체크하고 필터링 진행
     return queryParams.regionId && item.code && (item.type === "H") && String(item.code).startsWith(queryParams.regionId.substring(0, 5));
   });
-
 
   const fetchData = useCallback(async () => {
     const { ST_YM, ED_YM, regionId, cropId } = queryParams;
@@ -43,6 +43,21 @@ function Crop({ setRegion }) {
     }
   }, [pageNo, numOfRows, queryParams]);
 
+  const fetchChartDataForRegion = useCallback(async (ch_regionId) => {
+    try {
+      setLoading(true);
+      const data = await fetchWeatherData(pageNo, numOfRows, queryParams.ST_YM, queryParams.ED_YM, queryParams.regionId, queryParams.cropId);
+      setSelectedWeatherData(data.items || []); // 선택된 지역의 데이터를 저장
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching chart data:", err);
+      setError(`차트 데이터를 가져오는 중 문제가 발생했습니다: ${err.message}`);
+      setSelectedWeatherData([]);  // 오류 발생 시 데이터 초기화
+    } finally {
+      setLoading(false);
+    }
+  }, [pageNo, numOfRows, queryParams]);
+
   useEffect(() => {
     if (queryParams.ST_YM) {
       fetchData();
@@ -51,6 +66,16 @@ function Crop({ setRegion }) {
 
   const resetPageNo = () => {
     setPageNo(1);
+  };
+
+  const openModal = (regionId) => {
+    setModalOpenFor(regionId);  // 현재 어떤 차트 모달이 열렸는지 설정
+    fetchChartDataForRegion(regionId); // 해당 지역의 데이터를 불러옴
+  };
+
+  const closeModal = () => {
+    setModalOpenFor(null);  // 모달 닫기
+    setSelectedWeatherData(null);  // 선택된 차트 데이터 초기화
   };
 
   return (
@@ -70,10 +95,10 @@ function Crop({ setRegion }) {
 
                 {!loading && !error && weatherData.length > 0 && (
                   <>
-                    <button onClick={() => setIsModalOpen(true)} disabled={loading}>차트 보기</button>
+                    <button onClick={() => openModal(item.code)} disabled={loading}>차트 보기</button>
                     <Modal
-                      isOpen={isModalOpen}
-                      onRequestClose={() => setIsModalOpen(false)}
+                      isOpen={modalOpenFor === item.code}  // 해당 지역의 모달이 열려 있는지 확인
+                      onRequestClose={closeModal}
                       contentLabel="Weather Data Charts"
                       ariaHideApp={false}
                       style={{
@@ -89,10 +114,12 @@ function Crop({ setRegion }) {
                         }
                       }}
                     >
-                      <h2>기상 데이터 차트</h2>
-                      <button onClick={() => setIsModalOpen(false)}>닫기</button>
-                      <WeatherList weatherData={weatherData} />
+                      <h2>{item.city} {item.county} 기상 차트</h2>
+                      <button onClick={closeModal}>닫기</button>
+                      {/* 선택된 차트의 데이터만 표시 */}
+                      {selectedWeatherData && <WeatherList weatherData={selectedWeatherData} />}
                       <Soil pnuCode={Number(item.code)} />
+                      <Rand pnuCode={Number(item.code)} />
                     </Modal>
                     <button onClick={() => setRegion({ lat: parseFloat(item.lat), lng: parseFloat(item.long) })}> 이동</button>
                   </>
